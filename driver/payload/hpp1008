@@ -1,0 +1,49 @@
+#!/bin/sh
+# P1008 CUPS backend: load RAM firmware when missing, then use Apple's USB backend.
+set -eu
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+USB=/usr/libexec/cups/backend/usb
+FIRMWARE=/Library/Printers/HP-P1008/HP1006.dl
+if [ "$#" -eq 0 ]; then
+    "$USB" | /usr/bin/sed -n '/"HP LaserJet P1008"/s|^direct usb:|direct hpp1008:|p'
+    exit 0
+fi
+case "${DEVICE_URI:-}" in
+    hpp1008://*) USB_URI="usb:${DEVICE_URI#hpp1008:}" ;;
+    *) echo 'ERROR: Invalid P1008 device URI' >&2; exit 1 ;;
+esac
+find_device() {
+    "$USB" | /usr/bin/awk -v target="$USB_URI" '$1 == "direct" && $2 == target && /MDL:HP LaserJet P1008;/ {print; exit}'
+}
+DEVICE=$(find_device)
+if [ -z "$DEVICE" ]; then
+    echo 'INFO: P1008 is disconnected. Connect and power on the printer.' >&2
+    exit 6
+fi
+case "$DEVICE" in
+    *'FWVER:'*) ;;
+    *)
+        echo 'INFO: Loading P1008 RAM firmware before printing.' >&2
+        if ! DEVICE_URI="$USB_URI" "$USB" "$1" "$2" 'P1008 RAM firmware' 1 '' "$FIRMWARE" 3<&- 4<&- >/dev/null 2>/dev/null; then
+            echo 'ERROR: P1008 firmware transfer failed.' >&2
+            exit 6
+        fi
+        ready=0
+        attempt=0
+        while [ "$attempt" -lt 20 ]; do
+            /bin/sleep 1
+            DEVICE=$(find_device)
+            case "$DEVICE" in *'FWVER:'*) ready=1; break ;; esac
+            attempt=$((attempt + 1))
+        done
+        if [ "$ready" -ne 1 ]; then
+            echo 'ERROR: P1008 did not report firmware ready; retry the job.' >&2
+            exit 6
+        fi
+        echo 'INFO: P1008 firmware is ready.' >&2
+        ;;
+esac
+DEVICE_URI="$USB_URI"
+export DEVICE_URI
+exec "$USB" "$@"
