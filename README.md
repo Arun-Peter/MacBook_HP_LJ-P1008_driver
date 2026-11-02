@@ -96,7 +96,7 @@ This is a user-space CUPS driver, not a kernel extension (`.kext`) or DriverKit 
 
 ## Source, validation and credits
 
-Source and build scripts are in [`driver/`](https://github.com/Arun-Peter/MacBook_HP_LJ-P1008_driver/tree/main/driver). Developers can rebuild using `cd driver && ./build.sh` with Xcode Command Line Tools, and run `./tests/smoke.sh` from that folder for offline checks. Installation from the release does not require them. [VALIDATION.md](VALIDATION.md) documents the test scope and limitations.
+Source and build scripts are in [`driver/`](https://github.com/Arun-Peter/MacBook_HP_LJ-P1008_driver/tree/main/driver). Developers can rebuild using `cd driver && sh build.sh` with Xcode Command Line Tools, and run `./tests/smoke.sh` from that folder for offline checks. Installation from the release does not require them. [VALIDATION.md](VALIDATION.md) documents the test scope and limitations.
 
 The native filter starts from [faradayfury/hp-laserjet-macos-driver](https://github.com/faradayfury/hp-laserjet-macos-driver), commit `5f65848b443aaa5d136b3eff4d8241c8ff39c20d`, with XQX protocol code from Rick Richardson’s foo2zjs and JBIG-KIT by Markus Kuhn. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE](LICENSE). Open-source code is GPL-2.0-or-later; HP firmware is separate proprietary software and is not covered by that licence.
 
